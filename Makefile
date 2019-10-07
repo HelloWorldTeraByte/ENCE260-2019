@@ -1,7 +1,7 @@
 # File:   Makefile
-# Author: M. P. Hayes, UCECE
-# Date:   12 Sep 2010
-# Descr:  Makefile for game
+# Author: Randipa Gunathilake, Mike Mika
+# Date:   07/10/2019
+# Descr:  Makefile for the boxing game
 
 # Definitions.
 CC = avr-gcc
