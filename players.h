@@ -13,4 +13,5 @@ void draw_enemy(Player p);
 void draw_ally(Player player);
 
 void set_player_pos(Player *player, uint8_t position);
+
 #endif
