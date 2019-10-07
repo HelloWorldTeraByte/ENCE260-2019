@@ -21,7 +21,6 @@ void display_character(char character)
     tinygl_text (buffer);
 }
 
-
 int main(void)
 {
     char character = 'A';
@@ -35,20 +34,17 @@ int main(void)
     pacer_init (PACER_RATE);
 
     while(1) {
-        pacer_wait ();
-        tinygl_update ();
-        navswitch_update ();
+        pacer_wait();
+        tinygl_update();
+        navswitch_update();
         
-        if (navswitch_push_event_p (NAVSWITCH_NORTH))
+        if (navswitch_push_event_p(NAVSWITCH_NORTH))
             character++;
 
-        if (navswitch_push_event_p (NAVSWITCH_SOUTH))
+        if (navswitch_push_event_p(NAVSWITCH_SOUTH))
             character--;
-
-        /* TODO: Transmit the character over IR on a NAVSWITCH_PUSH
-           event.  */
-        
-        display_character (character);
+       
+        display_character(character);
         
     }
 
