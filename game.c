@@ -8,6 +8,8 @@
 #include "ir_uart.h"
 #include "tinygl.h"
 #include "../fonts/font3x5_1.h"
+// #include "led.h"
+// #include "spwm.h"
 
 #include "players.h"
 
@@ -29,20 +31,19 @@ int main(void)
 
     Player rival;
     Player ally;
-    set_player_pos(&rival, 4);
-    set_player_pos(&ally, 6);
-
+    set_player_pos(&rival, 3);
+    set_player_pos(&ally, 3);
+    
 
     while(1) {
         pacer_wait();
-        navswitch_update();
-        
+        navswitch_update();        
         if (navswitch_push_event_p(NAVSWITCH_NORTH)) {
-            set_player_pos(&ally, ally.pos+1);
+            set_player_pos(&rival, rival.pos+1);
             //ir_uart_putc ('1');
         }
         if (navswitch_push_event_p(NAVSWITCH_SOUTH)) {
-            set_player_pos(&ally, ally.pos-1);
+            set_player_pos(&rival, rival.pos-1);
             //ir_uart_putc ('2');
         }
 
