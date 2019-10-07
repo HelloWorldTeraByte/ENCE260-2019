@@ -15,7 +15,7 @@ void draw_enemy(Player p)
     tinygl_draw_point(tinygl_point(3,p.pos-1), 1);
     tinygl_draw_point(tinygl_point(3,p.pos+1), 1);
 }
-// to clear out the position and to make every time the light matrix is moved to another set of matrix pin.
+// to clear out the position and to move to another set of matrix pin.
 void draw_ally(Player player)
 {
     tinygl_draw_point(tinygl_point(4, player.prev_pos), 0);    // to clear out the previous movement of the player.
