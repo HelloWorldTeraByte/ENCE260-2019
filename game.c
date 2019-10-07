@@ -7,45 +7,53 @@
 #include "navswitch.h"
 #include "ir_uart.h"
 #include "tinygl.h"
-#include "../fonts/font5x7_1.h"
+#include "../fonts/font3x5_1.h"
 
+#include "players.h"
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
 
-void display_character(char character)
-{
-    char buffer[2];
-    buffer[0] = character;
-    buffer[1] = '\0';
-    tinygl_text (buffer);
-}
-
 int main(void)
 {
-    char character = 'A';
-
     system_init();
-    tinygl_init(PACER_RATE);
-    tinygl_font_set(&font5x7_1);
-    tinygl_text_speed_set(MESSAGE_RATE);
+    pacer_init(PACER_RATE);
     navswitch_init();
+    
+    tinygl_init(PACER_RATE);
+    tinygl_font_set(&font3x5_1);
+    tinygl_text_speed_set(MESSAGE_RATE);
+    tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
+    tinygl_text_dir_set(TINYGL_TEXT_DIR_ROTATE);
+    
 
-    pacer_init (PACER_RATE);
+    Player rival;
+    Player ally;
+    set_player_pos(&rival, 4);
+    set_player_pos(&ally, 6);
+
 
     while(1) {
         pacer_wait();
-        tinygl_update();
         navswitch_update();
         
-        if (navswitch_push_event_p(NAVSWITCH_NORTH))
-            character++;
+        if (navswitch_push_event_p(NAVSWITCH_NORTH)) {
+            set_player_pos(&ally, ally.pos+1);
+            //ir_uart_putc ('1');
+        }
+        if (navswitch_push_event_p(NAVSWITCH_SOUTH)) {
+            set_player_pos(&ally, ally.pos-1);
+            //ir_uart_putc ('2');
+        }
 
-        if (navswitch_push_event_p(NAVSWITCH_SOUTH))
-            character--;
-       
-        display_character(character);
+        if (ir_uart_read_ready_p ()) {
+            uint8_t data;
+            data = ir_uart_getc ();
+        }
         
+        draw_enemy(rival);
+        draw_ally(ally);
+        tinygl_update();
     }
 
     return 0;
