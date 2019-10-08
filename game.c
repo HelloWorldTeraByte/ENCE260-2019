@@ -11,6 +11,7 @@
 #include "../fonts/font3x5_1.h"
 
 #include "players.h"
+#include "ir_com.h"
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
@@ -71,7 +72,7 @@ main(void)
 			if(ir_uart_read_ready_p()) {
 				uint8_t data; 
 				data = ir_uart_getc();         // gets the character and stores it in data
-				if(data == 'B') {
+				if(data == 'b') {
 					game_data.rival_ready = true;
 				}
 			}
@@ -118,7 +119,7 @@ main(void)
 					break;
 				case STATE_PLAY:
 					move_player_right(&ally);      // moves the player rival to the left
-					ir_uart_putc('a');
+					ir_uart_putc('d');
 					break;
 
 				case STATE_OVER:
@@ -137,7 +138,7 @@ main(void)
 
 				case STATE_PLAY:
 					move_player_left(&ally);      // moves the player rival to the left
-					ir_uart_putc('d');
+					ir_uart_putc('a');
 					break;
 
 				case STATE_OVER:
@@ -148,11 +149,27 @@ main(void)
 			}
 		}
 
+		// if true the North Switch is pressed
+		if (navswitch_push_event_p(NAVSWITCH_EAST)) {
+			switch (game_state) {
+				case STATE_WAIT:
+					break;
+
+				case STATE_PLAY:
+					break;
+
+				case STATE_OVER:
+					break;
+				default:
+					break;
+			}
+		}
+
 		if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
 			switch (game_state) {
 				case STATE_WAIT:
 					game_data.ally_ready = true;
-					ir_uart_putc('B');
+					ir_uart_putc('b');
 					break;
 
 				case STATE_PLAY:
@@ -172,10 +189,10 @@ main(void)
 			data = ir_uart_getc();         // gets the character and stores it in data
 			switch (data) {
 				case 'a':
-					move_player_right(&rival);      // moves the player rival to the left
+					move_player_left(&rival);      // moves the player rival to the left, the player movement is inverted
 					break;
 				case 'd':
-					move_player_left(&rival);     // moves the player rival to the right
+					move_player_right(&rival);     // moves the player rival to the right, the player movement is inverted
 					break;
 				default:
 					break;
