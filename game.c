@@ -7,6 +7,7 @@
 #include "navswitch.h"
 #include "ir_uart.h"
 #include "tinygl.h"
+#include "timer.h"
 #include "../fonts/font3x5_1.h"
 
 #include "players.h"
@@ -71,15 +72,19 @@ main(void)
 				if(data == 'B') {
 					game_data.rival_ready = true;
 				}
-				if(game_data.ally_ready && game_data.rival_ready) {
-					game_state = STATE_BEGIN;
-				}
+			}
 
+			if(game_data.ally_ready && game_data.rival_ready) {
+					game_state = STATE_BEGIN;
 			}
 			
 		}
 		if(game_state == STATE_BEGIN) {
+			//tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
 			tinygl_text("3");
+
+			tinygl_update();
+			tinygl_clear();
 			game_state = STATE_PLAY;
 		}
 
