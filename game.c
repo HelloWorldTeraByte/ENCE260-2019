@@ -21,6 +21,7 @@ typedef enum {STATE_WAIT, STATE_BEGIN, STATE_PLAY, STATE_OVER} game_state_t;
 typedef struct {
 	bool rival_ready;
 	bool ally_ready;
+	bool begin_init;
 } game_data_t;
 
 void 
@@ -39,6 +40,7 @@ init_system()
 	system_init();              // initialised the system module
 	pacer_init(PACER_RATE);     // initialised a rate for the time taken to excecute
 	ir_uart_init();
+	timer_init();
 	navswitch_init();           // initial the navigation switch
 }
 
@@ -49,7 +51,7 @@ main(void)
 	init_graphics();
 	
 	game_state_t game_state = STATE_WAIT;
-	game_data_t game_data = {false, false};
+	game_data_t game_data = {false, false, false};
 
 	Player rival;
 	Player ally;
@@ -79,11 +81,26 @@ main(void)
 			}
 			
 		}
-		if(game_state == STATE_BEGIN) {
-			//tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
-			tinygl_text("3");
 
+		if(game_state == STATE_BEGIN) {
+			//TODO: Fix the timing
+			timer_tick_t start;
+			timer_tick_t now;
+
+			if(!game_data.begin_init) {
+				tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
+				tinygl_clear();
+				tinygl_text("3 2 1 GO");
+				start = timer_get();
+			}
+
+			if(!game_data.begin_init)
+				game_data.begin_init = true;
+			
 			tinygl_update();
+
+			//now = timer_wait_until(now + (timer_tick_t)(TIMER_RATE * 2));
+
 			tinygl_clear();
 			game_state = STATE_PLAY;
 		}
@@ -99,9 +116,9 @@ main(void)
 			switch (game_state) {
 				case STATE_WAIT:
 					break;
-
 				case STATE_PLAY:
-					set_player_pos(&rival, rival.pos-1);      // moves the player rival to the left
+					move_player_right(&ally);      // moves the player rival to the left
+					ir_uart_putc('a');
 					break;
 
 				case STATE_OVER:
@@ -110,7 +127,6 @@ main(void)
 				default:
 					break;
 			}
-			//ir_uart_putc ('1');
 		}
 
 		// if true the North Switch is pressed
@@ -120,7 +136,8 @@ main(void)
 					break;
 
 				case STATE_PLAY:
-					set_player_pos(&rival, rival.pos+1);      // moves the player rival to the right
+					move_player_left(&ally);      // moves the player rival to the left
+					ir_uart_putc('d');
 					break;
 
 				case STATE_OVER:
@@ -129,7 +146,6 @@ main(void)
 				default:
 					break;
 			}
-			//ir_uart_putc ('2');
 		}
 
 		if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
@@ -140,7 +156,6 @@ main(void)
 					break;
 
 				case STATE_PLAY:
-					set_player_pos(&rival, rival.pos+1);      // moves the player rival to the right
 					break;
 
 				case STATE_OVER:
@@ -149,13 +164,22 @@ main(void)
 				default:
 					break;
 			}
-			//ir_uart_putc ('2');
 		}
 
 		// Is the character ready to be recived
 		if (ir_uart_read_ready_p ()) {
 			uint8_t data; 
-			data = ir_uart_getc ();         // gets the character and stores it in data
+			data = ir_uart_getc();         // gets the character and stores it in data
+			switch (data) {
+				case 'a':
+					move_player_right(&rival);      // moves the player rival to the left
+					break;
+				case 'd':
+					move_player_left(&rival);     // moves the player rival to the right
+					break;
+				default:
+					break;
+			}
 		}
 
 	}
