@@ -8,13 +8,11 @@
 void 
 draw_enemy(Player p) 
 {
-    // TODO: Make sure that the -1 and +1 doesnt go off the display
     tinygl_draw_line(tinygl_point(0,p.prev_pos), tinygl_point(2,p.prev_pos), 0); 
     tinygl_draw_line(tinygl_point(1,p.prev_pos-1), tinygl_point(1,p.prev_pos+1), 0);
     tinygl_draw_point(tinygl_point(3,p.prev_pos-1), 0);
     tinygl_draw_point(tinygl_point(3,p.prev_pos+1), 0);
 
-    // TODO: Make sure that the player does not go out of bound, so-1 and +1 doesnt go off the display matrix
     tinygl_draw_line(tinygl_point(0,p.pos), tinygl_point(2,p.pos), 1);
     tinygl_draw_line(tinygl_point(1,p.pos-1), tinygl_point(1,p.pos+1), 1);
     tinygl_draw_point(tinygl_point(3,p.pos-1), 1);
@@ -37,5 +35,17 @@ set_player_pos(Player *player, uint8_t pos) {
         player->prev_pos = player->pos;                     // set the previous postion to the current position 
         player->pos = pos;                                  // set the current position after the previous position
     }
+}
+
+void
+move_player_right(Player *player)
+{
+    set_player_pos(player, player->pos-1);
+}
+
+void
+move_player_left(Player *player)
+{
+    set_player_pos(player, player->pos+1);
 }
 
