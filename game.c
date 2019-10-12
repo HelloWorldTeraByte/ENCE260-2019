@@ -14,6 +14,9 @@
 #include "players.h"
 #include "ir_com.h"
 #include "button.h"
+#include "led.h"
+#include "spwm.h"
+
 
 void
 init_graphics(void)
@@ -34,6 +37,7 @@ init_system(void)
     timer_init();
     navswitch_init();           // initial the navigation switch
     button_init();
+    led_init();
 }
 
 int
@@ -41,6 +45,8 @@ main(void)
 {
     init_system();
     init_graphics();
+
+    spwm_t health_spwm1 = {.duty = 100, .period = 150};
 
     game_state_t game_state = STATE_WAIT;
     game_data_t game_data = {false, false, false};
@@ -51,6 +57,8 @@ main(void)
     player_state_t rival_state = STATE_IDLE;
     player_state_t ally_state = STATE_IDLE;
 
+    ally.health = 100;
+    rival.health = 100;
     set_player_pos(&rival, 3);  // set the inital players position in the matrix platform
     set_player_pos(&ally, 3);   // set the initial players position in the matrix platform
 
@@ -131,8 +139,15 @@ main(void)
                 rival_state_ticks = 0;
             }
 
+
+
+            //Update the matrix
             draw_enemy(rival, rival_state);
             draw_ally(ally);
+
+            //Set the led accoring to the health of the player ally
+            spwm_duty_set(&health_spwm1, ally.health);
+            led_set(LED1, spwm_update(&health_spwm1));
        }
 
 
