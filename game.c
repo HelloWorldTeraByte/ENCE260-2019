@@ -74,8 +74,8 @@ main(void)
             if(ir_uart_read_ready_p()) {
                 uint8_t data;
                 data = ir_uart_getc();         // gets the character and stores it in data
-                if(data == 'b')             // make your own while loop that runs the tinygl_update() until enough timer is elapsed look timer.h.
-{
+                // make your own while loop that runs the tinygl_update() until enough timer is elapsed look timer.h.
+                if(data == 'b') {
                     game_data.rival_ready = true;
                 }
             }
@@ -117,10 +117,12 @@ main(void)
                 case STATE_WAIT:
                     break;
                 case STATE_PLAY:
-                    move_player_right(&ally);      // moves the player rival to the left
-                    ir_uart_putc('d');
+                   // move_player_right(&ally);      // moves the player rival to the left
+                    //ir_uart_putc('d');122
+                    if(ir_com_send_char('d') == 1) {
+                        move_player_right(&ally);
+                    }
                     break;
-
                 case STATE_OVER:
                     break;
 
@@ -136,8 +138,11 @@ main(void)
                     break;
 
                 case STATE_PLAY:
-                    move_player_left(&ally);      // moves the player rival to the left
-                    ir_uart_putc('a');
+                    //move_player_left(&ally);      // moves the player rival to the left
+                    //ir_uart_putc('a');
+                    if(ir_com_send_char('a') == 1) {
+                        move_player_left(&ally);
+                    }
                     break;
 
                 case STATE_OVER:
@@ -183,12 +188,13 @@ main(void)
         }
 
         // Read in IR data
-        if(ir_uart_read_ready_p ()) {
+        if(ir_uart_read_ready_p()) {
             uint8_t data;
             data = ir_uart_getc();         // gets the character and stores it in data
-            //ir_uart_putc('C');              //Send Confirmation back
+            if(data >= 'a' && data <= 'z')
+                ir_uart_putc('C');              //Send Confirmation back
 
-            switch (data) {
+            switch(data) {
                 case 'a':
                     move_player_left(&rival);      // moves the player rival to the left, the player movement is inverted
                     break;
