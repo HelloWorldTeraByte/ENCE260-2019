@@ -60,7 +60,7 @@ prescale.o: ../../drivers/avr/prescale.c ../../drivers/avr/prescale.h ../../driv
 players.o: players.c players.h ../../drivers/avr/system.h ../../utils/tinygl.h 
 	$(CC) -c $(CFLAGS) $< -o $@
 
-ir_com.o: ir_com.c ir_com.h ../../drivers/avr/system.h ../../drivers/avr/ir_uart.h
+ir_com.o: ir_com.c ir_com.h game.h ../../drivers/avr/system.h ../../drivers/avr/ir_uart.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 button.o: ../../drivers/button.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ../../drivers/button.h
