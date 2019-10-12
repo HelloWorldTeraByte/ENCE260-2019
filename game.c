@@ -15,7 +15,7 @@
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
-#define WAITTICKS 2500
+#define BEGIN_WAIT 2500
 
 
 typedef enum {STATE_WAIT, STATE_BEGIN, STATE_PLAY, STATE_OVER} game_state_t;
@@ -63,6 +63,7 @@ main(void)
 
     tinygl_text("WAITING");
 
+    uint16_t ticks = 0;
     while(1) {
         pacer_wait();           // count up to until the counter is equal to the TCNT.
         navswitch_update();     // navigation updates the North and South buttons that is declared
@@ -73,7 +74,8 @@ main(void)
             if(ir_uart_read_ready_p()) {
                 uint8_t data;
                 data = ir_uart_getc();         // gets the character and stores it in data
-                if(data == 'b') {
+                if(data == 'b')             // make your own while loop that runs the tinygl_update() until enough timer is elapsed look timer.h.
+{
                     game_data.rival_ready = true;
                 }
             }
@@ -85,41 +87,22 @@ main(void)
         }
 
         if(game_state == STATE_BEGIN) {
-            //TODO: Fix the timing
-            //timer_tick_t start;
-            //timer_tick_t now;
-
-            int now = 0;
-
+            tinygl_update();
+            ticks++;
+       
             if(!game_data.begin_init) {
                 tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
                 tinygl_clear();
                 tinygl_text("3 2 1 GO");
-                //start = timer_get();
             }
 
             if(!game_data.begin_init)
                 game_data.begin_init = true;
 
-                while(1) {
-                // make your own while loop that runs the tinygl_update() until enough timer is elapsed look timer.h.
-                pacer_wait();
-                tinygl_update();
-                if((now) >= WAITTICKS){
-                    break;
-                }
-                now++;
-
-
-            //now = timer_wait_until(now + (timer_tick_t)(TIMER_RATE * 2));
+            if(ticks > BEGIN_WAIT) {
+                tinygl_clear();
+                game_state = STATE_PLAY;
             }
-
-            //tinygl_update();
-
-            //now = timer_wait_until(now + (timer_tick_t)(TIMER_RATE * 2));
-
-            tinygl_clear();
-            game_state = STATE_PLAY;
         }
 
         if(game_state == STATE_PLAY) {
@@ -203,7 +186,7 @@ main(void)
         if(ir_uart_read_ready_p ()) {
             uint8_t data;
             data = ir_uart_getc();         // gets the character and stores it in data
-            ir_uart_putc('C');              //Send Confirmation back
+            //ir_uart_putc('C');              //Send Confirmation back
 
             switch (data) {
                 case 'a':
