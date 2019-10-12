@@ -1,5 +1,5 @@
 /* Author(s): Randipa Gunathilake, Mike Mika
- *  Date: 07/10/2019 
+ *  Date: 07/10/2019
  */
 
 #include "system.h"
@@ -15,191 +15,207 @@
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
+#define WAITTICKS 2500
 
 
 typedef enum {STATE_WAIT, STATE_BEGIN, STATE_PLAY, STATE_OVER} game_state_t;
 
 typedef struct {
-	bool rival_ready;
-	bool ally_ready;
-	bool begin_init;
+    bool rival_ready;
+    bool ally_ready;
+    bool begin_init;
 } game_data_t;
 
-void 
+void
 init_graphics()
 {
-	tinygl_init(PACER_RATE);
-	tinygl_font_set(&font3x5_1);
-	tinygl_text_speed_set(MESSAGE_RATE);
-	tinygl_text_mode_set(TINYGL_TEXT_MODE_SCROLL);
-	tinygl_text_dir_set(TINYGL_TEXT_DIR_ROTATE);
+    tinygl_init(PACER_RATE);
+    tinygl_font_set(&font3x5_1);
+    tinygl_text_speed_set(MESSAGE_RATE);
+    tinygl_text_mode_set(TINYGL_TEXT_MODE_SCROLL);STATE_BEGIN
+    tinygl_text_dir_set(TINYGL_TEXT_DIR_ROTATE);
 }
 
-void 
+void
 init_system()
 {
-	system_init();              // initialised the system module
-	pacer_init(PACER_RATE);     // initialised a rate for the time taken to excecute
-	ir_uart_init();
-	timer_init();
-	navswitch_init();           // initial the navigation switch
+    system_init();              // initialised the system module
+    pacer_init(PACER_RATE);     // initialised a rate for the time taken to excecute
+    ir_uart_init();
+    timer_init();
+    navswitch_init();           // initial the navigation switch
 }
 
-int 
+int
 main(void)
 {
-	init_system();
-	init_graphics();
-	
-	game_state_t game_state = STATE_WAIT;
-	game_data_t game_data = {false, false, false};
+    init_system();
+    init_graphics();STATE_BEGIN
 
-	Player rival;
-	Player ally;
+    game_state_t game_state = STATE_WAIT;
+    game_data_t game_data = {false, false, false};
 
-	set_player_pos(&rival, 3);  // set the players position in the matrix platform
-	set_player_pos(&ally, 3);   // set the players position in the matrix platform
+    Player rival;
+    Player ally;
 
-	tinygl_text("WAITING");
+    set_player_pos(&rival, 3);  // set the inital players position in the matrix platform
+    set_player_pos(&ally, 3);   // set the initial players position in the matrix platform
 
-	while(1) {
-		pacer_wait();           // count up to until the counter is equal to the TCNT.
-		navswitch_update();     // navigation updates the North and South buttons that is declared 
+    tinygl_text("WAITING");
 
-		if(game_state == STATE_WAIT) {
-			tinygl_update();
+    while(1) {
+        pacer_wait();           // count up to until the counter is equal to the TCNT.
+        navswitch_update();     // navigation updates the North and South buttons that is declared
 
-			if(ir_uart_read_ready_p()) {
-				uint8_t data; 
-				data = ir_uart_getc();         // gets the character and stores it in data
-				if(data == 'b') {
-					game_data.rival_ready = true;
-				}
-			}
+        if(game_state == STATE_WAIT) {
+            tinygl_update();
 
-			if(game_data.ally_ready && game_data.rival_ready) {
-					game_state = STATE_BEGIN;
-			}
-			
-		}
+            if(ir_uart_read_ready_p()) {
+                uint8_t data;
+                data = ir_uart_getc();         // gets the character and stores it in data
+                if(data == 'b') {
+                    game_data.rival_ready = true;
+                }
+            }
 
-		if(game_state == STATE_BEGIN) {
-			//TODO: Fix the timing
-			timer_tick_t start;
-			timer_tick_t now;
+            if(game_data.ally_ready && game_data.rival_ready) {
+                    game_state = STATE_BEGIN;
+            }
 
-			if(!game_data.begin_init) {
-				tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
-				tinygl_clear();
-				tinygl_text("3 2 1 GO");
-				start = timer_get();
-			}
+        }
 
-			if(!game_data.begin_init)
-				game_data.begin_init = true;
-			
-			tinygl_update();
+        if(game_state == STATE_BEGIN) {
+            //TODO: Fix the timing
+            timer_tick_t start;
+            timer_tick_t now;
 
-			//now = timer_wait_until(now + (timer_tick_t)(TIMER_RATE * 2));
+            if(!game_data.begin_init) {
+                tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
+                tinygl_clear();
+                tinygl_text("3 2 1 GO");
+                start = timer_get();
+            }
 
-			tinygl_clear();
-			game_state = STATE_PLAY;
-		}
+            if(!game_data.begin_init)
+                game_data.begin_init = true;
 
-		if(game_state == STATE_PLAY) {
-			draw_enemy(rival);
-			draw_ally(ally);
-			tinygl_update();
-		}
+                while(1) {
+                // make your own while loop that runs the tinygl_update() until enough timer is elapsed look timer.h.
+                pacer_wait();
+                tinygl_update();
+                if((now) >= WAITTICKS){
+                    break;
+                }
+                now++;
 
-		// if true the North Switch is pressed
-		if (navswitch_push_event_p(NAVSWITCH_NORTH)) {
-			switch (game_state) {
-				case STATE_WAIT:
-					break;
-				case STATE_PLAY:
-					move_player_right(&ally);      // moves the player rival to the left
-					ir_uart_putc('d');
-					break;
 
-				case STATE_OVER:
-					break;
+            //now = timer_wait_until(now + (timer_tick_t)(TIMER_RATE * 2));
+            }
 
-				default:
-					break;
-			}
-		}
+            //tinygl_update();
 
-		// if true the North Switch is pressed
-		if (navswitch_push_event_p(NAVSWITCH_SOUTH)) {
-			switch (game_state) {
-				case STATE_WAIT:
-					break;
+            //now = timer_wait_until(now + (timer_tick_t)(TIMER_RATE * 2));
 
-				case STATE_PLAY:
-					move_player_left(&ally);      // moves the player rival to the left
-					ir_uart_putc('a');
-					break;
+            tinygl_clear();
+            game_state = STATE_PLAY;
+        }
 
-				case STATE_OVER:
-					break;
+        if(game_state == STATE_PLAY) {
+            draw_enemy(rival);
+            draw_ally(ally);
+            tinygl_update();
+        }
 
-				default:
-					break;
-			}
-		}
+        // if true the North Switch is pressed
+        if (navswitch_push_event_p(NAVSWITCH_NORTH)) {
+            switch (game_state) {
+                case STATE_WAIT:
+                    break;
+                case STATE_PLAY:
+                    move_player_right(&ally);      // moves the player rival to the left
+                    ir_uart_putc('d');
+                    break;
 
-		// if true the North Switch is pressed
-		if (navswitch_push_event_p(NAVSWITCH_EAST)) {
-			switch (game_state) {
-				case STATE_WAIT:
-					break;
+                case STATE_OVER:
+                    break;
 
-				case STATE_PLAY:
-					break;
+                default:
+                    break;
+            }
+        }
 
-				case STATE_OVER:
-					break;
-				default:
-					break;
-			}
-		}
+        // if true the North Switch is pressed
+        if (navswitch_push_event_p(NAVSWITCH_SOUTH)) {
+            switch (game_state) {
+                case STATE_WAIT:
+                    break;
 
-		if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
-			switch (game_state) {
-				case STATE_WAIT:
-					game_data.ally_ready = true;
-					ir_uart_putc('b');
-					break;
+                case STATE_PLAY:
+                    move_player_left(&ally);      // moves the player rival to the left
+                    ir_uart_putc('a');
+                    break;
 
-				case STATE_PLAY:
-					break;
+                case STATE_OVER:
+                    break;
 
-				case STATE_OVER:
-					break;
+                default:
+                    break;
+            }
+        }
 
-				default:
-					break;
-			}
-		}
+        // if true the North Switch is pressed
+        if (navswitch_push_event_p(NAVSWITCH_EAST)) {
+            switch (game_state) {
+                case STATE_WAIT:
+                    break;
 
-		// Is the character ready to be recived
-		if (ir_uart_read_ready_p ()) {
-			uint8_t data; 
-			data = ir_uart_getc();         // gets the character and stores it in data
-			switch (data) {
-				case 'a':
-					move_player_left(&rival);      // moves the player rival to the left, the player movement is inverted
-					break;
-				case 'd':
-					move_player_right(&rival);     // moves the player rival to the right, the player movement is inverted
-					break;
-				default:
-					break;
-			}
-		}
+                case STATE_PLAY:
+                    break;
 
-	}
+                case STATE_OVER:
+                    break;
+                default:
+                    break;
+            }
+        }
 
-	return 0;
+        if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
+            switch (game_state) {
+                case STATE_WAIT:
+                    game_data.ally_ready = true;
+                    ir_uart_putc('b');
+                    break;
+
+                case STATE_PLAY:
+                    break;
+
+                case STATE_OVER:
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // Read in IR data
+        if(ir_uart_read_ready_p ()) {
+            uint8_t data;
+            data = ir_uart_getc();         // gets the character and stores it in data
+            ir_uart_putc('C');              //Send Confirmation back
+
+            switch (data) {
+                case 'a':
+                    move_player_left(&rival);      // moves the player rival to the left, the player movement is inverted
+                    break;
+                case 'd':
+                    move_player_right(&rival);     // moves the player rival to the right, the player movement is inverted
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+
+    return 0;
 }
