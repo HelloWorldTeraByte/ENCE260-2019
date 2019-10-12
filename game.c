@@ -32,7 +32,7 @@ init_graphics()
     tinygl_init(PACER_RATE);
     tinygl_font_set(&font3x5_1);
     tinygl_text_speed_set(MESSAGE_RATE);
-    tinygl_text_mode_set(TINYGL_TEXT_MODE_SCROLL);STATE_BEGIN
+    tinygl_text_mode_set(TINYGL_TEXT_MODE_SCROLL);
     tinygl_text_dir_set(TINYGL_TEXT_DIR_ROTATE);
 }
 
@@ -50,7 +50,7 @@ int
 main(void)
 {
     init_system();
-    init_graphics();STATE_BEGIN
+    init_graphics();
 
     game_state_t game_state = STATE_WAIT;
     game_data_t game_data = {false, false, false};
@@ -86,14 +86,16 @@ main(void)
 
         if(game_state == STATE_BEGIN) {
             //TODO: Fix the timing
-            timer_tick_t start;
-            timer_tick_t now;
+            //timer_tick_t start;
+            //timer_tick_t now;
+
+            int now = 0;
 
             if(!game_data.begin_init) {
                 tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
                 tinygl_clear();
                 tinygl_text("3 2 1 GO");
-                start = timer_get();
+                //start = timer_get();
             }
 
             if(!game_data.begin_init)
