@@ -10,21 +10,9 @@
 #include "timer.h"
 #include "../fonts/font3x5_1.h"
 
+#include "game.h"
 #include "players.h"
 #include "ir_com.h"
-
-#define PACER_RATE 500
-#define MESSAGE_RATE 10
-#define BEGIN_WAIT 2500
-
-
-typedef enum {STATE_WAIT, STATE_BEGIN, STATE_PLAY, STATE_OVER} game_state_t;
-
-typedef struct {
-    bool rival_ready;
-    bool ally_ready;
-    bool begin_init;
-} game_data_t;
 
 void
 init_graphics()
@@ -58,12 +46,18 @@ main(void)
     Player rival;
     Player ally;
 
+    player_state_t rival_state = STATE_IDLE;
+    player_state_t ally_state = STATE_IDLE;
+
     set_player_pos(&rival, 3);  // set the inital players position in the matrix platform
     set_player_pos(&ally, 3);   // set the initial players position in the matrix platform
 
-    tinygl_text("WAITING");
 
     uint16_t ticks = 0;
+    uint16_t state_ticks = 0;
+    uint8_t unstable_state = 0;
+
+    tinygl_text("WAITING");
     while(1) {
         pacer_wait();           // count up to until the counter is equal to the TCNT.
         navswitch_update();     // navigation updates the North and South buttons that is declared
@@ -106,7 +100,17 @@ main(void)
         }
 
         if(game_state == STATE_PLAY) {
-            draw_enemy(rival);
+            if(unstable_state)
+                state_ticks++;
+
+            if(state_ticks > MAX_STATE_TICKS) {
+                ally_state = STATE_IDLE;
+                ir_uart_putc('i');
+                unstable_state = 0;
+                state_ticks = 0;
+            }
+
+            draw_enemy(rival, rival_state);
             draw_ally(ally);
             tinygl_update();
         }
@@ -116,13 +120,12 @@ main(void)
             switch (game_state) {
                 case STATE_WAIT:
                     break;
+
                 case STATE_PLAY:
-                   // move_player_right(&ally);      // moves the player rival to the left
-                    //ir_uart_putc('d');122
-                    if(ir_com_send_char('d') == 1) {
+                    if(ir_com_send_char('d') == 1) 
                         move_player_right(&ally);
-                    }
                     break;
+
                 case STATE_OVER:
                     break;
 
@@ -131,17 +134,35 @@ main(void)
             }
         }
 
-        // if true the North Switch is pressed
-        if (navswitch_push_event_p(NAVSWITCH_SOUTH)) {
+        // if true the South Switch is pressed
+        if(navswitch_push_event_p(NAVSWITCH_SOUTH)) {
             switch (game_state) {
                 case STATE_WAIT:
                     break;
 
                 case STATE_PLAY:
-                    //move_player_left(&ally);      // moves the player rival to the left
-                    //ir_uart_putc('a');
-                    if(ir_com_send_char('a') == 1) {
+                    if(ir_com_send_char('a') == 1) 
                         move_player_left(&ally);
+                    break;
+
+                case STATE_OVER:
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        // if true the East Switch is pressed
+        if(navswitch_push_event_p(NAVSWITCH_EAST)) {
+            switch (game_state) {
+                case STATE_WAIT:
+                    break;
+
+                case STATE_PLAY:
+                    if(ir_com_send_char('z') == 1)  {
+                        ally_state = STATE_RHOOK;
+                        unstable_state = 1;
                     }
                     break;
 
@@ -153,8 +174,8 @@ main(void)
             }
         }
 
-        // if true the North Switch is pressed
-        if (navswitch_push_event_p(NAVSWITCH_EAST)) {
+        // if true the WEST Switch is pressed
+        if(navswitch_push_event_p(NAVSWITCH_WEST)) {
             switch (game_state) {
                 case STATE_WAIT:
                     break;
@@ -169,7 +190,7 @@ main(void)
             }
         }
 
-        if (navswitch_push_event_p(NAVSWITCH_PUSH)) {
+        if(navswitch_push_event_p(NAVSWITCH_PUSH)) {
             switch (game_state) {
                 case STATE_WAIT:
                     game_data.ally_ready = true;
@@ -201,6 +222,12 @@ main(void)
                 case 'd':
                     move_player_right(&rival);     // moves the player rival to the right, the player movement is inverted
                     break;
+                case 'z':
+                    rival_state = STATE_RHOOK;
+                    break;
+                case 'i':
+                    rival_state = STATE_IDLE;
+                    break;
                 default:
                     break;
             }
@@ -210,3 +237,4 @@ main(void)
 
     return 0;
 }
+
