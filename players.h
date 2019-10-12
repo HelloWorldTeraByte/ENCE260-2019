@@ -20,7 +20,7 @@ void draw_ally(Player player);
 
 void draw_enemy_state(Player p, player_state_t state);
 void draw_enemy_body(Player p); 
-void clear_enemy(Player p);
+void clear_enemy(void);
 
 void set_player_pos(Player *player, uint8_t position);
 void move_player_left(Player *player);

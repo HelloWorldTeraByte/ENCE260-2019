@@ -6,25 +6,11 @@
 #include "tinygl.h"
 
 void 
-clear_enemy(Player p)
-{
-    //tinygl_draw_line(tinygl_point(0,p.prev_pos), tinygl_point(2,p.prev_pos), 0); 
-    //tinygl_draw_line(tinygl_point(1,p.prev_pos-1), tinygl_point(1,p.prev_pos+1), 0);
-    //tinygl_draw_point(tinygl_point(3,p.prev_pos-1), 0);
-    //tinygl_draw_point(tinygl_point(3,p.prev_pos+1), 0);
-
-    int i;
-    for(i = 0; i < 4; i++) {
-        tinygl_draw_line(tinygl_point(i, 0), tinygl_point(i,6), 0); 
-    }
-}
-
-void 
 draw_enemy(Player p, player_state_t state) 
 {
-    clear_enemy(p);
-    draw_enemy_body(p);
+    clear_enemy();
     draw_enemy_state(p, state);
+    draw_enemy_body(p);
 }
 
 void 
@@ -40,15 +26,32 @@ void
 draw_enemy_state(Player p, player_state_t state)
 {
     switch (state) {
+        case STATE_IDLE:
+            //clear_enemy();
+            //draw_enemy_body(p);
+            break;
         case STATE_RHOOK:
             tinygl_draw_point(tinygl_point(1,p.pos-2), 1);
             break;
-        case STATE_IDLE:
-            clear_enemy(p);
-            draw_enemy_body(p);
+        case STATE_B_RHOOK:
+            tinygl_draw_line(tinygl_point(0,p.pos-2), tinygl_point(3,p.pos-2), 1);
             break;
         default:
             break;
+    }
+}
+
+void 
+clear_enemy(void)
+{
+    //tinygl_draw_line(tinygl_point(0,p.prev_pos), tinygl_point(2,p.prev_pos), 0); 
+    //tinygl_draw_line(tinygl_point(1,p.prev_pos-1), tinygl_point(1,p.prev_pos+1), 0);
+    //tinygl_draw_point(tinygl_point(3,p.prev_pos-1), 0);
+    //tinygl_draw_point(tinygl_point(3,p.prev_pos+1), 0);
+
+    int i;
+    for(i = 0; i < 4; i++) {
+        tinygl_draw_line(tinygl_point(i, 0), tinygl_point(i,6), 0); 
     }
 }
 
