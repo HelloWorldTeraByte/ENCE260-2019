@@ -13,9 +13,10 @@
 #include "game.h"
 #include "players.h"
 #include "ir_com.h"
+#include "button.h"
 
 void
-init_graphics()
+init_graphics(void)
 {
     tinygl_init(PACER_RATE);
     tinygl_font_set(&font3x5_1);
@@ -25,13 +26,14 @@ init_graphics()
 }
 
 void
-init_system()
+init_system(void)
 {
     system_init();              // initialised the system module
     pacer_init(PACER_RATE);     // initialised a rate for the time taken to excecute
     ir_uart_init();
     timer_init();
     navswitch_init();           // initial the navigation switch
+    button_init();
 }
 
 int
@@ -54,13 +56,17 @@ main(void)
 
 
     uint16_t ticks = 0;
-    uint16_t state_ticks = 0;
-    uint8_t unstable_state = 0;
+
+    uint16_t ally_state_ticks = 0;
+    uint16_t rival_state_ticks = 0;
+    uint8_t ally_unstable_state = 0;
+    uint8_t rival_unstable_state = 0;
 
     tinygl_text("WAITING");
     while(1) {
         pacer_wait();           // count up to until the counter is equal to the TCNT.
         navswitch_update();     // navigation updates the North and South buttons that is declared
+        button_update();
 
         if(game_state == STATE_WAIT) {
             tinygl_update();
@@ -69,7 +75,7 @@ main(void)
                 uint8_t data;
                 data = ir_uart_getc();         // gets the character and stores it in data
                 // make your own while loop that runs the tinygl_update() until enough timer is elapsed look timer.h.
-                if(data == 'b') {
+                if(data == ENC_BEGIN) {
                     game_data.rival_ready = true;
                 }
             }
@@ -83,7 +89,7 @@ main(void)
         if(game_state == STATE_BEGIN) {
             tinygl_update();
             ticks++;
-       
+
             if(!game_data.begin_init) {
                 tinygl_text_mode_set(TINYGL_TEXT_MODE_STEP);
                 tinygl_clear();
@@ -100,20 +106,35 @@ main(void)
         }
 
         if(game_state == STATE_PLAY) {
-            if(unstable_state)
-                state_ticks++;
+            tinygl_update();
 
-            if(state_ticks > MAX_STATE_TICKS) {
+            if(ally_unstable_state) {
+                ally_state_ticks++;
+            }
+
+            if(ally_state_ticks > MAX_STATE_TICKS) {
                 ally_state = STATE_IDLE;
-                ir_uart_putc('i');
-                unstable_state = 0;
-                state_ticks = 0;
+                ally_unstable_state = 0;
+                ally_state_ticks = 0;
+
+                //TODO: Confirm this got recived
+                //ir_uart_putc(ENC_IDLE);
+            }
+
+            if(rival_unstable_state) {
+                rival_state_ticks++;
+            }
+
+            if(rival_state_ticks > MAX_STATE_TICKS) {
+                rival_state = STATE_IDLE;
+                rival_unstable_state = 0;
+                rival_state_ticks = 0;
             }
 
             draw_enemy(rival, rival_state);
             draw_ally(ally);
-            tinygl_update();
-        }
+       }
+
 
         // if true the North Switch is pressed
         if (navswitch_push_event_p(NAVSWITCH_NORTH)) {
@@ -122,8 +143,11 @@ main(void)
                     break;
 
                 case STATE_PLAY:
-                    if(ir_com_send_char('d') == 1) 
+                    if(ally_state == STATE_IDLE && ir_com_send_char(ENC_MR) == 1) {
                         move_player_right(&ally);
+                        ally_state = STATE_MV_R;
+                        ally_unstable_state = 1;
+                    }
                     break;
 
                 case STATE_OVER:
@@ -141,8 +165,11 @@ main(void)
                     break;
 
                 case STATE_PLAY:
-                    if(ir_com_send_char('a') == 1) 
+                    if(ally_state == STATE_IDLE && ir_com_send_char(ENC_ML) == 1) {
                         move_player_left(&ally);
+                        ally_state = STATE_MV_L;
+                        ally_unstable_state = 1;
+                    }
                     break;
 
                 case STATE_OVER:
@@ -160,10 +187,18 @@ main(void)
                     break;
 
                 case STATE_PLAY:
-                    if(ir_com_send_char('z') == 1)  {
-                        ally_state = STATE_RHOOK;
-                        unstable_state = 1;
+                    if(button_down_p(0)) {
+                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_BRH) == 1)  {
+                            ally_state = STATE_B_RHOOK;
+                            ally_unstable_state = 1;
+                        }
+                    } else {
+                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_RH) == 1)  {
+                            ally_state = STATE_RHOOK;
+                            ally_unstable_state = 1;
+                        }
                     }
+
                     break;
 
                 case STATE_OVER:
@@ -194,7 +229,7 @@ main(void)
             switch (game_state) {
                 case STATE_WAIT:
                     game_data.ally_ready = true;
-                    ir_uart_putc('b');
+                    ir_uart_putc(ENC_BEGIN);
                     break;
 
                 case STATE_PLAY:
@@ -212,22 +247,34 @@ main(void)
         if(ir_uart_read_ready_p()) {
             uint8_t data;
             data = ir_uart_getc();         // gets the character and stores it in data
-            if(data >= 'a' && data <= 'z')
-                ir_uart_putc('C');              //Send Confirmation back
+            if((data >= 'a' && data <= 'z') || (data >= 'A' && data <= 'Z'))
+                ir_uart_putc(ENC_CONF);              //Send Confirmation back
 
             switch(data) {
-                case 'a':
+                case ENC_ML:
+                    rival_state = STATE_MV_L;
+                    rival_unstable_state = 1;
                     move_player_left(&rival);      // moves the player rival to the left, the player movement is inverted
                     break;
-                case 'd':
+                case ENC_MR:
+                    rival_state = STATE_MV_R;
+                    rival_unstable_state = 1;
                     move_player_right(&rival);     // moves the player rival to the right, the player movement is inverted
                     break;
-                case 'z':
+
+                case ENC_RH:
                     rival_state = STATE_RHOOK;
+                    rival_unstable_state = 1;
                     break;
-                case 'i':
-                    rival_state = STATE_IDLE;
+                case ENC_BRH:
+                    rival_state = STATE_B_RHOOK;
+                    rival_unstable_state = 1;
                     break;
+
+//                case ENC_IDLE:
+//                    rival_state = STATE_IDLE;
+//                   break;
+
                 default:
                     break;
             }
@@ -238,3 +285,44 @@ main(void)
     return 0;
 }
 
+
+           // switch(ally_state) {
+           //     case STATE_IDLE:
+           //         tinygl_draw_point(tinygl_point(0, 0), 1);
+           //         tinygl_draw_point(tinygl_point(0, 1), 0);
+           //         tinygl_draw_point(tinygl_point(0, 2), 0);
+           //         break;
+           //     case STATE_RHOOK:
+           //         tinygl_draw_point(tinygl_point(0, 0), 0);
+           //         tinygl_draw_point(tinygl_point(0, 1), 1);
+           //         tinygl_draw_point(tinygl_point(0, 2), 0);
+           //         break;
+           //     case STATE_B_RHOOK:
+           //         tinygl_draw_point(tinygl_point(0, 0), 0);
+           //         tinygl_draw_point(tinygl_point(0, 1), 0);
+           //         tinygl_draw_point(tinygl_point(0, 2), 1);
+           //         break;
+           //     default:
+           //         break;
+           // }
+           // switch(rival_state) {
+           //     case STATE_IDLE:
+           //         tinygl_draw_point(tinygl_point(1, 0), 1);
+           //         tinygl_draw_point(tinygl_point(1, 1), 0);
+           //         tinygl_draw_point(tinygl_point(1, 2), 0);
+           //         break;
+           //     case STATE_RHOOK:
+           //         tinygl_draw_point(tinygl_point(1, 0), 0);
+           //         tinygl_draw_point(tinygl_point(1, 1), 1);
+           //         tinygl_draw_point(tinygl_point(1, 2), 0);
+           //         break;
+           //     case STATE_B_RHOOK:
+           //         tinygl_draw_point(tinygl_point(1, 0), 0);
+           //         tinygl_draw_point(tinygl_point(1, 1), 0);
+           //         tinygl_draw_point(tinygl_point(1, 2), 1);
+           //         break;
+           //     default:
+           //         break;
+           // }
+ 
+ 
