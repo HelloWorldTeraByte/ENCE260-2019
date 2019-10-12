@@ -63,12 +63,6 @@ players.o: players.c players.h ../../drivers/avr/system.h ../../utils/tinygl.h
 ir_com.o: ir_com.c ir_com.h ../../drivers/avr/system.h ../../drivers/avr/ir_uart.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
-# spwm.o: ../../utils/spwm.c ../../drivers/avr/system.h ../../utils/spwm.h
-# 	$(CC) -c $(CFLAGS) $< -o $@
-
-# led.o: ../../drivers/led.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ../../drivers/led.h
-# 	$(CC) -c $(CFLAGS) $< -o $@
-
 # Link: create ELF output file from object files.
 game.out: game.o system.o pacer.o navswitch.o ir_uart.o tinygl.o pio.o font.o timer.o timer0.o usart1.o display.o ledmat.o prescale.o players.o ir_com.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
@@ -85,5 +79,3 @@ clean:
 program: game.out
 	$(OBJCOPY) -O ihex game.out game.hex
 	dfu-programmer atmega32u2 erase; dfu-programmer atmega32u2 flash game.hex; dfu-programmer atmega32u2 start
-
-
