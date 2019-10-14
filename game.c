@@ -40,6 +40,20 @@ init_system(void)
     led_init();
 }
 
+
+void 
+unstable_state_mang(uint8_t *unstable_state, uint16_t *state_ticks, player_state_t *state)
+{
+    if(*unstable_state)
+        (*state_ticks)++;
+
+    if(*state_ticks > MAX_STATE_TICKS) {
+        *state = STATE_IDLE;
+        *unstable_state = 0;
+        *state_ticks = 0;
+    }
+}
+
 int
 main(void)
 {
@@ -49,11 +63,12 @@ main(void)
     spwm_t health_spwm1 = {.duty = 100, .period = 150};
 
     game_state_t game_state = STATE_WAIT;
-    game_data_t game_data = {false, false, false};
+    game_data_t game_data = {false, false, false, false, false, false, false, false};
 
     Player rival;
     Player ally;
 
+    //TODO: Put this in the Player struct 
     player_state_t rival_state = STATE_IDLE;
     player_state_t ally_state = STATE_IDLE;
 
@@ -64,6 +79,9 @@ main(void)
 
 
     uint16_t ticks = 0;
+    uint16_t r_ticks = 0;
+    uint16_t l_ticks = 0;
+    uint16_t j_ticks = 0;
 
     uint16_t ally_state_ticks = 0;
     uint16_t rival_state_ticks = 0;
@@ -110,37 +128,73 @@ main(void)
             if(ticks > BEGIN_WAIT) {
                 tinygl_clear();
                 game_state = STATE_PLAY;
+                ticks = 0;
             }
         }
 
         if(game_state == STATE_PLAY) {
             tinygl_update();
 
-            if(ally_unstable_state) {
-                ally_state_ticks++;
+            //TODO: Move this to the players module
+            unstable_state_mang(&ally_unstable_state, &ally_state_ticks, &ally_state);
+            unstable_state_mang(&rival_unstable_state, &rival_state_ticks, &rival_state);
+
+            if(ally.pos == rival.pos) {
+                switch(rival_state) {
+                    case STATE_RHOOK:
+                        game_data.r_hook_damage = true;
+                        break;
+                    case STATE_LHOOK:
+                        game_data.l_hook_damage = true;
+                        break;
+                    case STATE_JAB:
+                        game_data.jab_damage = true;
+                        break;
+                    default:
+                        break;
+                }
             }
 
-            if(ally_state_ticks > MAX_STATE_TICKS) {
-                ally_state = STATE_IDLE;
-                ally_unstable_state = 0;
-                ally_state_ticks = 0;
-
-                //TODO: Confirm this got recived
-                //ir_uart_putc(ENC_IDLE);
+            switch(ally_state) {
+                case STATE_B_RHOOK:
+                    game_data.r_hook_damage = false;
+                    break;
+                case STATE_B_LHOOK:
+                    game_data.l_hook_damage = false;
+                    break;
+                case STATE_B_JAB:
+                    game_data.jab_damage = false;
+                    break;
+                default:
+                    break;
             }
 
-            if(rival_unstable_state) {
-                rival_state_ticks++;
+            if(game_data.r_hook_damage)
+                r_ticks++;
+            if(game_data.l_hook_damage)
+                l_ticks++;
+            if(game_data.jab_damage)
+                j_ticks++;
+
+            if(r_ticks > MAX_BLOCK_TICKS) {
+                r_ticks = 0;
+                ally.health -= RH_DAMAGE;
+            }
+            if(l_ticks > MAX_BLOCK_TICKS) {
+                l_ticks = 0;
+                ally.health -= LH_DAMAGE;
+
+            }
+            if(j_ticks > MAX_BLOCK_TICKS) {
+                j_ticks = 0;
+                ally.health -= J_DAMAGE;
             }
 
-            if(rival_state_ticks > MAX_STATE_TICKS) {
-                rival_state = STATE_IDLE;
-                rival_unstable_state = 0;
-                rival_state_ticks = 0;
+            if(ally.health < 10) {
+                game_state = STATE_OVER;
+                game_data.rival_won = true;
             }
-
-
-
+          
             //Update the matrix
             draw_enemy(rival, rival_state);
             draw_ally(ally);
@@ -150,9 +204,26 @@ main(void)
             led_set(LED1, spwm_update(&health_spwm1));
        }
 
+       if(game_state == STATE_OVER) {
+            tinygl_update();
+
+           if(!game_data.over_init) {
+                ir_com_send_char(ENC_GL);
+                tinygl_text_mode_set(TINYGL_TEXT_MODE_SCROLL);
+                tinygl_clear();
+                if(game_data.rival_won)
+                    tinygl_text("YOU LOST");
+                if(!game_data.rival_won)
+                    tinygl_text("YOU WON");
+            }
+            if(!game_data.over_init)
+                game_data.over_init = true;
+       }
+
 
         // if true the North Switch is pressed
         if (navswitch_push_event_p(NAVSWITCH_NORTH)) {
+            
             switch (game_state) {
                 case STATE_WAIT:
                     break;
@@ -213,9 +284,8 @@ main(void)
                             ally_unstable_state = 1;
                         }
                     }
-
                     break;
-
+                    
                 case STATE_OVER:
                     break;
 
@@ -231,6 +301,17 @@ main(void)
                     break;
 
                 case STATE_PLAY:
+                    if(button_down_p(0)) {
+                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_BLH) == 1)  {
+                            ally_state = STATE_B_LHOOK;
+                            ally_unstable_state = 1;
+                        }
+                    } else {
+                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_LH) == 1)  {
+                            ally_state = STATE_LHOOK;
+                            ally_unstable_state = 1;
+                        }
+                    }
                     break;
 
                 case STATE_OVER:
@@ -248,6 +329,17 @@ main(void)
                     break;
 
                 case STATE_PLAY:
+                    if(button_down_p(0)) {
+                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_BJ) == 1)  {
+                            ally_state = STATE_B_JAB;
+                            ally_unstable_state = 1;
+                        }
+                    } else {
+                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_J) == 1)  {
+                            ally_state = STATE_JAB;
+                            ally_unstable_state = 1;
+                        }
+                    }
                     break;
 
                 case STATE_OVER:
@@ -286,9 +378,28 @@ main(void)
                     rival_unstable_state = 1;
                     break;
 
-//                case ENC_IDLE:
-//                    rival_state = STATE_IDLE;
-//                   break;
+                case ENC_LH:
+                    rival_state = STATE_LHOOK;
+                    rival_unstable_state = 1;
+                    break;
+                case ENC_BLH:
+                    rival_state = STATE_B_LHOOK;
+                    rival_unstable_state = 1;
+                    break;
+
+                case ENC_J:
+                    rival_state = STATE_JAB;
+                    rival_unstable_state = 1;
+                    break;
+                case ENC_BJ:
+                    rival_state = STATE_B_JAB;
+                    rival_unstable_state = 1;
+                    break;
+
+                case ENC_GL:
+                    game_state = STATE_OVER;
+                    game_data.rival_won = false;
+                    break;
 
                 default:
                     break;
@@ -299,45 +410,3 @@ main(void)
 
     return 0;
 }
-
-
-           // switch(ally_state) {
-           //     case STATE_IDLE:
-           //         tinygl_draw_point(tinygl_point(0, 0), 1);
-           //         tinygl_draw_point(tinygl_point(0, 1), 0);
-           //         tinygl_draw_point(tinygl_point(0, 2), 0);
-           //         break;
-           //     case STATE_RHOOK:
-           //         tinygl_draw_point(tinygl_point(0, 0), 0);
-           //         tinygl_draw_point(tinygl_point(0, 1), 1);
-           //         tinygl_draw_point(tinygl_point(0, 2), 0);
-           //         break;
-           //     case STATE_B_RHOOK:
-           //         tinygl_draw_point(tinygl_point(0, 0), 0);
-           //         tinygl_draw_point(tinygl_point(0, 1), 0);
-           //         tinygl_draw_point(tinygl_point(0, 2), 1);
-           //         break;
-           //     default:
-           //         break;
-           // }
-           // switch(rival_state) {
-           //     case STATE_IDLE:
-           //         tinygl_draw_point(tinygl_point(1, 0), 1);
-           //         tinygl_draw_point(tinygl_point(1, 1), 0);
-           //         tinygl_draw_point(tinygl_point(1, 2), 0);
-           //         break;
-           //     case STATE_RHOOK:
-           //         tinygl_draw_point(tinygl_point(1, 0), 0);
-           //         tinygl_draw_point(tinygl_point(1, 1), 1);
-           //         tinygl_draw_point(tinygl_point(1, 2), 0);
-           //         break;
-           //     case STATE_B_RHOOK:
-           //         tinygl_draw_point(tinygl_point(1, 0), 0);
-           //         tinygl_draw_point(tinygl_point(1, 1), 0);
-           //         tinygl_draw_point(tinygl_point(1, 2), 1);
-           //         break;
-           //     default:
-           //         break;
-           // }
- 
- 
