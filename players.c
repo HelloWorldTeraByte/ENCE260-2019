@@ -9,8 +9,8 @@ void
 draw_enemy(Player p, player_state_t state) 
 {
     clear_enemy();
-    draw_enemy_state(p, state);
     draw_enemy_body(p);
+    draw_enemy_state(p, state);
 }
 
 void 
@@ -36,6 +36,23 @@ draw_enemy_state(Player p, player_state_t state)
         case STATE_B_RHOOK:
             tinygl_draw_line(tinygl_point(0,p.pos-2), tinygl_point(3,p.pos-2), 1);
             break;
+
+        case STATE_LHOOK:
+            tinygl_draw_point(tinygl_point(1,p.pos+2), 1);
+            break;
+        case STATE_B_LHOOK:
+            tinygl_draw_line(tinygl_point(0,p.pos+2), tinygl_point(3,p.pos+2), 1);
+            break;
+
+        case STATE_JAB:
+            tinygl_draw_line(tinygl_point(0,p.pos-1), tinygl_point(2,p.pos+1), 1);
+            tinygl_draw_line(tinygl_point(0,p.pos+1), tinygl_point(2,p.pos-1), 1);
+            break;
+        case STATE_B_JAB:
+            tinygl_draw_line(tinygl_point(0,p.pos), tinygl_point(2,p.pos), 1);
+            tinygl_draw_line(tinygl_point(0,p.pos+1), tinygl_point(2,p.pos-1), 1);
+            break;
+
         default:
             break;
     }
