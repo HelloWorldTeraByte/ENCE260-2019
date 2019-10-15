@@ -4,7 +4,8 @@
 #include "game.h"
 
 //Returns 1 if the transmissino is recived by the other kit or 0 otherwise
-int8_t ir_com_send_char(uint8_t c)
+int8_t 
+ir_com_send_char(uint8_t c)
 {
     ir_uart_putc(c);
 
