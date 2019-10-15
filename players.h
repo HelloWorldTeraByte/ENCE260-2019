@@ -8,6 +8,7 @@
 #include "system.h"
 #include "game.h"
 
+//Keep track of the state the player is in
 typedef enum {STATE_IDLE, STATE_MV_L, STATE_MV_R,
                 STATE_RHOOK, STATE_LHOOK, STATE_JAB,
                 STATE_B_RHOOK, STATE_B_LHOOK, STATE_B_JAB
@@ -15,11 +16,10 @@ typedef enum {STATE_IDLE, STATE_MV_L, STATE_MV_R,
 
 // A player that has the property including health, its position that is at and it previous position 
 typedef struct {
-    //TODO: Make this smaller
     int16_t health;
-    uint8_t pos;
-    uint8_t prev_pos;
-    player_state_t state;
+    uint8_t pos;            //Playes position
+    uint8_t prev_pos;       //Players previous position
+    player_state_t state;   //Player state 
 } Player;
 
 void draw_enemy(Player p, player_state_t state); 

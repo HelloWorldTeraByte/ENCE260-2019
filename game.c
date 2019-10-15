@@ -17,6 +17,7 @@
 #include "led.h"
 #include "spwm.h"
 
+//Initialse the tinygl graphics library
 void
 init_graphics(void)
 {
@@ -27,6 +28,7 @@ init_graphics(void)
     tinygl_text_dir_set(TINYGL_TEXT_DIR_ROTATE);
 }
 
+//Initalise the system
 void
 init_system(void)
 {
@@ -46,19 +48,20 @@ main(void)
     init_system();
     init_graphics();
 
+    //LED to show the health of the ally
     spwm_t health_spwm1 = {.duty = 100, .period = 200};
 
     game_state_t game_state = STATE_WAIT;
     game_data_t game_data = {false, false, false, false, false, false, false, false};
 
-    Player rival;
-    Player ally;
+    Player rival;       //Rival is the opponent
+    Player ally;        //Ally is the player
 
     ally.health = 100;
     rival.health = 100;
 
-    ally.state = STATE_IDLE;
-    rival.state = STATE_IDLE;
+    ally.state = STATE_IDLE;        //Initally the player is in idle state
+    rival.state = STATE_IDLE;       //The rival is also in the idle state
     set_player_pos(&rival, 3);  // set the inital players position in the matrix platform
     set_player_pos(&ally, 3);   // set the initial players position in the matrix platform
 
