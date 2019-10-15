@@ -17,7 +17,6 @@
 #include "led.h"
 #include "spwm.h"
 
-
 void
 init_graphics(void)
 {
@@ -41,19 +40,6 @@ init_system(void)
 }
 
 
-void 
-unstable_state_mang(uint8_t *unstable_state, uint16_t *state_ticks, player_state_t *state)
-{
-    if(*unstable_state)
-        (*state_ticks)++;
-
-    if(*state_ticks > MAX_STATE_TICKS) {
-        *state = STATE_IDLE;
-        *unstable_state = 0;
-        *state_ticks = 0;
-    }
-}
-
 int
 main(void)
 {
@@ -68,15 +54,13 @@ main(void)
     Player rival;
     Player ally;
 
-    //TODO: Put this in the Player struct 
-    player_state_t rival_state = STATE_IDLE;
-    player_state_t ally_state = STATE_IDLE;
-
     ally.health = 100;
     rival.health = 100;
+
+    ally.state = STATE_IDLE;
+    rival.state = STATE_IDLE;
     set_player_pos(&rival, 3);  // set the inital players position in the matrix platform
     set_player_pos(&ally, 3);   // set the initial players position in the matrix platform
-
 
     uint16_t ticks = 0;
     uint16_t r_ticks = 0;
@@ -136,8 +120,8 @@ main(void)
             tinygl_update();
 
             //TODO: Move this to the players module
-            unstable_state_mang(&ally_unstable_state, &ally_state_ticks, &ally_state);
-            unstable_state_mang(&rival_unstable_state, &rival_state_ticks, &rival_state);
+            unstable_state_mang(&ally_unstable_state, &ally_state_ticks, &ally.state);
+            unstable_state_mang(&rival_unstable_state, &rival_state_ticks, &rival.state);
 
             if(game_data.r_hook_damage)
                 r_ticks++;
@@ -169,7 +153,7 @@ main(void)
             }
 
             if(ally.pos == rival.pos) {
-                switch(rival_state) {
+                switch(rival.state) {
                     case STATE_RHOOK:
                         game_data.r_hook_damage = true;
                         break;
@@ -184,7 +168,7 @@ main(void)
                 }
             }
 
-            switch(ally_state) {
+            switch(ally.state) {
                 case STATE_B_RHOOK:
                     game_data.r_hook_damage = false;
                     r_ticks = 0;
@@ -202,7 +186,7 @@ main(void)
             }
           
             //Update the matrix
-            draw_enemy(rival, rival_state);
+            draw_enemy(rival, rival.state);
             draw_ally(ally);
 
             //Set the led accoring to the health of the player ally
@@ -235,9 +219,9 @@ main(void)
                     break;
 
                 case STATE_PLAY:
-                    if(ally_state == STATE_IDLE && ir_com_send_char(ENC_MR) == 1) {
+                    if(ally.state == STATE_IDLE && ir_com_send_char(ENC_MR) == 1) {
                         move_player_right(&ally);
-                        ally_state = STATE_MV_R;
+                        ally.state = STATE_MV_R;
                         ally_unstable_state = 1;
                     }
                     break;
@@ -257,9 +241,9 @@ main(void)
                     break;
 
                 case STATE_PLAY:
-                    if(ally_state == STATE_IDLE && ir_com_send_char(ENC_ML) == 1) {
+                    if(ally.state == STATE_IDLE && ir_com_send_char(ENC_ML) == 1) {
                         move_player_left(&ally);
-                        ally_state = STATE_MV_L;
+                        ally.state = STATE_MV_L;
                         ally_unstable_state = 1;
                     }
                     break;
@@ -280,13 +264,13 @@ main(void)
 
                 case STATE_PLAY:
                     if(button_down_p(0)) {
-                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_BRH) == 1)  {
-                            ally_state = STATE_B_RHOOK;
+                        if(ally.state == STATE_IDLE && ir_com_send_char(ENC_BRH) == 1)  {
+                            ally.state = STATE_B_RHOOK;
                             ally_unstable_state = 1;
                         }
                     } else {
-                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_RH) == 1)  {
-                            ally_state = STATE_RHOOK;
+                        if(ally.state == STATE_IDLE && ir_com_send_char(ENC_RH) == 1)  {
+                            ally.state = STATE_RHOOK;
                             ally_unstable_state = 1;
                         }
                     }
@@ -308,13 +292,13 @@ main(void)
 
                 case STATE_PLAY:
                     if(button_down_p(0)) {
-                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_BLH) == 1)  {
-                            ally_state = STATE_B_LHOOK;
+                        if(ally.state == STATE_IDLE && ir_com_send_char(ENC_BLH) == 1)  {
+                            ally.state = STATE_B_LHOOK;
                             ally_unstable_state = 1;
                         }
                     } else {
-                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_LH) == 1)  {
-                            ally_state = STATE_LHOOK;
+                        if(ally.state == STATE_IDLE && ir_com_send_char(ENC_LH) == 1)  {
+                            ally.state = STATE_LHOOK;
                             ally_unstable_state = 1;
                         }
                     }
@@ -336,13 +320,13 @@ main(void)
 
                 case STATE_PLAY:
                     if(button_down_p(0)) {
-                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_BJ) == 1)  {
-                            ally_state = STATE_B_JAB;
+                        if(ally.state == STATE_IDLE && ir_com_send_char(ENC_BJ) == 1)  {
+                            ally.state = STATE_B_JAB;
                             ally_unstable_state = 1;
                         }
                     } else {
-                        if(ally_state == STATE_IDLE && ir_com_send_char(ENC_J) == 1)  {
-                            ally_state = STATE_JAB;
+                        if(ally.state == STATE_IDLE && ir_com_send_char(ENC_J) == 1)  {
+                            ally.state = STATE_JAB;
                             ally_unstable_state = 1;
                         }
                     }
@@ -365,40 +349,40 @@ main(void)
 
             switch(data) {
                 case ENC_ML:
-                    rival_state = STATE_MV_L;
+                    rival.state = STATE_MV_L;
                     rival_unstable_state = 1;
                     move_player_left(&rival);      // moves the player rival to the left, the player movement is inverted
                     break;
                 case ENC_MR:
-                    rival_state = STATE_MV_R;
+                    rival.state = STATE_MV_R;
                     rival_unstable_state = 1;
                     move_player_right(&rival);     // moves the player rival to the right, the player movement is inverted
                     break;
 
                 case ENC_RH:
-                    rival_state = STATE_RHOOK;
+                    rival.state = STATE_RHOOK;
                     rival_unstable_state = 1;
                     break;
                 case ENC_BRH:
-                    rival_state = STATE_B_RHOOK;
+                    rival.state = STATE_B_RHOOK;
                     rival_unstable_state = 1;
                     break;
 
                 case ENC_LH:
-                    rival_state = STATE_LHOOK;
+                    rival.state = STATE_LHOOK;
                     rival_unstable_state = 1;
                     break;
                 case ENC_BLH:
-                    rival_state = STATE_B_LHOOK;
+                    rival.state = STATE_B_LHOOK;
                     rival_unstable_state = 1;
                     break;
 
                 case ENC_J:
-                    rival_state = STATE_JAB;
+                    rival.state = STATE_JAB;
                     rival_unstable_state = 1;
                     break;
                 case ENC_BJ:
-                    rival_state = STATE_B_JAB;
+                    rival.state = STATE_B_JAB;
                     rival_unstable_state = 1;
                     break;
 

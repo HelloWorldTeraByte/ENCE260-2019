@@ -1,23 +1,14 @@
 #ifndef GAME_H
 #define GAME_H
 
-//500,2500
+#include "system.h"
+#include "players.h"
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
 
-#define BEGIN_WAIT 2500
-#define MAX_STATE_TICKS 250
-#define MAX_BLOCK_TICKS 250
-
-#define LH_DAMAGE 5
-#define RH_DAMAGE 5
-#define J_DAMAGE  5
-
-//#define ENC_IDLE 'l'
 #define ENC_BEGIN 'B'
 #define ENC_CONF 'C'
-//#define ENC_GW 'W'
 #define ENC_GL 'L'
 
 #define ENC_MR 'd'
@@ -29,16 +20,15 @@
 #define ENC_J 'v'
 #define ENC_BJ 'V'
 
+#define BEGIN_WAIT 2500
+#define MAX_STATE_TICKS 250
+#define MAX_BLOCK_TICKS 250
 
-#include "system.h"
+#define LH_DAMAGE 10
+#define RH_DAMAGE 10
+#define J_DAMAGE  5
 
 typedef enum {STATE_WAIT, STATE_BEGIN, STATE_PLAY, STATE_OVER} game_state_t;
-
-typedef enum {STATE_IDLE, STATE_MV_L, STATE_MV_R,
-                STATE_RHOOK, STATE_LHOOK, STATE_JAB,
-                STATE_B_RHOOK, STATE_B_LHOOK, STATE_B_JAB
-} player_state_t;
-
 
 typedef struct {
     bool rival_ready;
@@ -56,8 +46,5 @@ typedef struct {
 
 void init_system(void);
 void init_graphics(void);
-
-void unstable_state_mang(uint8_t *unstable_state, uint16_t *state_ticks, player_state_t *state);
-
 
 #endif
