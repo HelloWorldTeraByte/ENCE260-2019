@@ -5,6 +5,10 @@
 #include "players.h"
 #include "tinygl.h"
 
+static void clear_enemy(void);
+static void draw_enemy_body(Player p); 
+static void draw_enemy_state(Player p, player_state_t state);
+
 void 
 draw_enemy(Player p, player_state_t state) 
 {
@@ -13,7 +17,7 @@ draw_enemy(Player p, player_state_t state)
     draw_enemy_state(p, state);
 }
 
-void 
+static void 
 draw_enemy_body(Player p)
 {
     tinygl_draw_line(tinygl_point(0,p.pos), tinygl_point(2,p.pos), 1);
@@ -22,7 +26,7 @@ draw_enemy_body(Player p)
     tinygl_draw_point(tinygl_point(3,p.pos+1), 1);
 }
 
-void 
+static void 
 draw_enemy_state(Player p, player_state_t state)
 {
     switch (state) {
@@ -60,7 +64,7 @@ draw_enemy_state(Player p, player_state_t state)
     }
 }
 
-void 
+static void 
 clear_enemy(void)
 {
     //tinygl_draw_line(tinygl_point(0,p.prev_pos), tinygl_point(2,p.prev_pos), 0); 
@@ -104,3 +108,15 @@ move_player_left(Player *player)
     set_player_pos(player, player->pos+1);
 }
 
+void 
+unstable_state_mang(uint8_t *unstable_state, uint16_t *state_ticks, player_state_t *state)
+{
+    if(*unstable_state)
+        (*state_ticks)++;
+
+    if(*state_ticks > MAX_STATE_TICKS) {
+        *state = STATE_IDLE;
+        *unstable_state = 0;
+        *state_ticks = 0;
+    }
+}
