@@ -7,11 +7,11 @@
 #define MESSAGE_RATE 10
 
 #define BEGIN_WAIT 2500
-#define MAX_STATE_TICKS 500
+#define MAX_STATE_TICKS 250
 #define MAX_BLOCK_TICKS 250
 
-#define LH_DAMAGE 10
-#define RH_DAMAGE  10
+#define LH_DAMAGE 5
+#define RH_DAMAGE 5
 #define J_DAMAGE  5
 
 //#define ENC_IDLE 'l'

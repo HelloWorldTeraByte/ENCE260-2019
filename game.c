@@ -60,7 +60,7 @@ main(void)
     init_system();
     init_graphics();
 
-    spwm_t health_spwm1 = {.duty = 100, .period = 150};
+    spwm_t health_spwm1 = {.duty = 100, .period = 200};
 
     game_state_t game_state = STATE_WAIT;
     game_data_t game_data = {false, false, false, false, false, false, false, false};
@@ -139,6 +139,35 @@ main(void)
             unstable_state_mang(&ally_unstable_state, &ally_state_ticks, &ally_state);
             unstable_state_mang(&rival_unstable_state, &rival_state_ticks, &rival_state);
 
+            if(game_data.r_hook_damage)
+                r_ticks++;
+            if(game_data.l_hook_damage)
+                l_ticks++;
+            if(game_data.jab_damage)
+                j_ticks++;
+
+            if(r_ticks > MAX_BLOCK_TICKS) {
+                r_ticks = 0;
+                ally.health -= RH_DAMAGE;
+                game_data.r_hook_damage = false;
+            }
+            if(l_ticks > MAX_BLOCK_TICKS) {
+                l_ticks = 0;
+                ally.health -= LH_DAMAGE;
+                game_data.l_hook_damage = false;
+
+            }
+            if(j_ticks > MAX_BLOCK_TICKS) {
+                j_ticks = 0;
+                ally.health -= J_DAMAGE;
+                game_data.jab_damage = false;
+            }
+
+            if(ally.health < 5) {
+                game_state = STATE_OVER;
+                game_data.rival_won = true;
+            }
+
             if(ally.pos == rival.pos) {
                 switch(rival_state) {
                     case STATE_RHOOK:
@@ -158,41 +187,18 @@ main(void)
             switch(ally_state) {
                 case STATE_B_RHOOK:
                     game_data.r_hook_damage = false;
+                    r_ticks = 0;
                     break;
                 case STATE_B_LHOOK:
                     game_data.l_hook_damage = false;
+                    l_ticks = 0;
                     break;
                 case STATE_B_JAB:
                     game_data.jab_damage = false;
+                    j_ticks = 0;
                     break;
                 default:
                     break;
-            }
-
-            if(game_data.r_hook_damage)
-                r_ticks++;
-            if(game_data.l_hook_damage)
-                l_ticks++;
-            if(game_data.jab_damage)
-                j_ticks++;
-
-            if(r_ticks > MAX_BLOCK_TICKS) {
-                r_ticks = 0;
-                ally.health -= RH_DAMAGE;
-            }
-            if(l_ticks > MAX_BLOCK_TICKS) {
-                l_ticks = 0;
-                ally.health -= LH_DAMAGE;
-
-            }
-            if(j_ticks > MAX_BLOCK_TICKS) {
-                j_ticks = 0;
-                ally.health -= J_DAMAGE;
-            }
-
-            if(ally.health < 10) {
-                game_state = STATE_OVER;
-                game_data.rival_won = true;
             }
           
             //Update the matrix
