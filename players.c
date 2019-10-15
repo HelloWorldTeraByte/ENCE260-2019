@@ -45,12 +45,14 @@ draw_enemy_state(Player p, player_state_t state)
             break;
 
         case STATE_JAB:
+            clear_enemy();
             tinygl_draw_line(tinygl_point(0,p.pos-1), tinygl_point(2,p.pos+1), 1);
             tinygl_draw_line(tinygl_point(0,p.pos+1), tinygl_point(2,p.pos-1), 1);
             break;
         case STATE_B_JAB:
+            clear_enemy();
             tinygl_draw_line(tinygl_point(0,p.pos), tinygl_point(2,p.pos), 1);
-            tinygl_draw_line(tinygl_point(0,p.pos+1), tinygl_point(2,p.pos-1), 1);
+            tinygl_draw_line(tinygl_point(1,p.pos+1), tinygl_point(1,p.pos-1), 1);
             break;
 
         default:

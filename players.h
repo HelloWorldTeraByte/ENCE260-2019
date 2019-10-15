@@ -10,7 +10,8 @@
 
 // A player that has the property including health, its position that is at and it previous position 
 typedef struct {
-    uint8_t health;
+    //TODO: Make this smaller
+    int16_t health;
     uint8_t pos;
     uint8_t prev_pos;
 } Player;
