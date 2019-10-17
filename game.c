@@ -34,8 +34,8 @@ init_system(void)
 {
     system_init();              // initialised the system module
     pacer_init(PACER_RATE);     // initialised a rate for the time taken to excecute
-    ir_uart_init();
-    timer_init();
+    ir_uart_init();             // initialised  IR driver.
+    timer_init();               // initialised 
     navswitch_init();           // initial the navigation switch
     button_init();
     led_init();
@@ -65,8 +65,8 @@ main(void)
     set_player_pos(&rival, 3);  // set the inital players position in the matrix platform
     set_player_pos(&ally, 3);   // set the initial players position in the matrix platform
 
-    uint16_t ticks = 0;
-    uint16_t r_ticks = 0;
+    uint16_t ticks = 0;     // how many ticks to count at its maximum limit.
+    uint16_t r_ticks = 0;   // how many ticks counted on a right jab. r means right.
     uint16_t l_ticks = 0;
     uint16_t j_ticks = 0;
 
