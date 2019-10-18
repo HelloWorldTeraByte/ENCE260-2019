@@ -31,8 +31,6 @@ draw_enemy_state(Player p, player_state_t state)
 {
     switch (state) {
         case STATE_IDLE:
-            //clear_enemy();
-            //draw_enemy_body(p);
             break;
         case STATE_RHOOK:
             tinygl_draw_point(tinygl_point(1,p.pos-2), 1);
@@ -67,11 +65,6 @@ draw_enemy_state(Player p, player_state_t state)
 static void 
 clear_enemy(void)
 {
-    //tinygl_draw_line(tinygl_point(0,p.prev_pos), tinygl_point(2,p.prev_pos), 0); 
-    //tinygl_draw_line(tinygl_point(1,p.prev_pos-1), tinygl_point(1,p.prev_pos+1), 0);
-    //tinygl_draw_point(tinygl_point(3,p.prev_pos-1), 0);
-    //tinygl_draw_point(tinygl_point(3,p.prev_pos+1), 0);
-
     int i;
     for(i = 0; i < 4; i++) {
         tinygl_draw_line(tinygl_point(i, 0), tinygl_point(i,6), 0); 
@@ -96,18 +89,21 @@ set_player_pos(Player *player, uint8_t pos) {
     }
 }
 
+//Move the player to the right by one position
 void
 move_player_right(Player *player)
 {
     set_player_pos(player, player->pos-1);
 }
 
+//Move the player to the left by one position
 void
 move_player_left(Player *player)
 {
     set_player_pos(player, player->pos+1);
 }
 
+//Player's state manager
 void 
 unstable_state_mang(uint8_t *unstable_state, uint16_t *state_ticks, player_state_t *state)
 {

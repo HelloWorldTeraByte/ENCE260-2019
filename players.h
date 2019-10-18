@@ -22,13 +22,21 @@ typedef struct {
     player_state_t state;   //Player state 
 } Player;
 
+//Draw the enemy using the tinygl module
 void draw_enemy(Player p, player_state_t state); 
+//Draw the ally
 void draw_ally(Player player);
 
+//Set the position of the player passed in
 void set_player_pos(Player *player, uint8_t position);
+
+//Move the player to the left by one x position
 void move_player_left(Player *player);
+//Move the player to the right by one x position
 void move_player_right(Player *player);
 
+//State manager for players
+//This handles swtiching from unstable state to an idle state
 void unstable_state_mang(uint8_t *unstable_state, uint16_t *state_ticks, player_state_t *state);
 
 #endif
