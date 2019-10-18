@@ -9,6 +9,7 @@ static void clear_enemy(void);
 static void draw_enemy_body(Player p); 
 static void draw_enemy_state(Player p, player_state_t state);
 
+//Draw the enemy on the LED matrix
 void 
 draw_enemy(Player p, player_state_t state) 
 {
@@ -17,6 +18,7 @@ draw_enemy(Player p, player_state_t state)
     draw_enemy_state(p, state);
 }
 
+//Draw just the body
 static void 
 draw_enemy_body(Player p)
 {
@@ -26,6 +28,7 @@ draw_enemy_body(Player p)
     tinygl_draw_point(tinygl_point(3,p.pos+1), 1);
 }
 
+//Draw the enemy based on the state they are in
 static void 
 draw_enemy_state(Player p, player_state_t state)
 {
@@ -62,6 +65,7 @@ draw_enemy_state(Player p, player_state_t state)
     }
 }
 
+//Clear the top 4 rows
 static void 
 clear_enemy(void)
 {

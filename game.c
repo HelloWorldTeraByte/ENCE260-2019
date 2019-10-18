@@ -82,7 +82,8 @@ main(void)
         navswitch_update();                                                 // navigation updates the North and South buttons that is declared
         button_update();                                                    // updates the button when it is high or low is declared
         
-        if(game_state == STATE_WAIT) {                                     // if the game state is on a waiting state then it will update the tingl text saying that it is WAITING"
+        // if the game state is on a waiting state then it will update the tingl text saying that it is WAITING"
+        if(game_state == STATE_WAIT) {                                    
             tinygl_update();      
 
             if(ir_uart_read_ready_p()) {                                  // Check is it true that something was inadvertently read.  
@@ -100,7 +101,8 @@ main(void)
 
         }
 
-        if(game_state == STATE_BEGIN) {                         // once the game state is in the Begining process
+        // once the game state is in the Begining state
+        if(game_state == STATE_BEGIN) {                        
             tinygl_update();                                    // the tinygl updates the tinygl text.
             ticks++;                                           
 
