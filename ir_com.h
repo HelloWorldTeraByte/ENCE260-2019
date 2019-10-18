@@ -1,3 +1,6 @@
+/* Author(s): Randipa Gunathilake, Mike Mika
+ * Date: 09/10/2019
+ */
 #ifndef IR_COM
 #define IR_COM
 

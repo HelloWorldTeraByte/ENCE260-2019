@@ -1,3 +1,7 @@
+/* Author(s): Randipa Gunathilake, Mike Mika
+ * Date: 07/10/2019
+ */
+ 
 How to upload:
     1) First connect the UCFK to a computer with avr toolchain installed
     2) The UCFK must be put into reset mode for the porgramming, This is done by pressing S1(the white switch near the external headers)

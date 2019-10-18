@@ -1,3 +1,6 @@
+/* Author(s): Randipa Gunathilake, Mike Mika
+ * Date: 09/10/2019
+ */
 #include "ir_uart.h"
 
 #include "ir_com.h"

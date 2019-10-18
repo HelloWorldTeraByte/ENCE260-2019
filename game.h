@@ -1,3 +1,7 @@
+/* Author(s): Randipa Gunathilake, Mike Mika
+ * Date: 07/10/2019
+ */
+
 #ifndef GAME_H
 #define GAME_H
 
